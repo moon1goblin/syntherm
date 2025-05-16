@@ -5,18 +5,43 @@
 #include <csignal>
 #include <optional>
 #include <print>
-#include <thread>
 #include <RtMidi.h>
 
 #include "midiparser.hpp"
 
 namespace synth {
 
+void Callback(double /*timeStamp*/, std::vector<unsigned char>* message_vec, void* user_data) {
+	if (!message_vec->empty()) {
+		// im really sure this will not work but lets try it
+		std::atomic<double>& cur_freq = *static_cast<std::atomic<double>*>(user_data);
+		// if (cur_freq != 0) {
+		// 	std::println("cur_freq {}", cur_freq.load());
+		// }
+
+		std::optional<MidiParser::MidiEvent> midi_event = MidiParser::Parse(*message_vec);
+		if (midi_event) {
+			std::println("current keynumber: {}", midi_event->KeyNumber);
+			std::println("current command: {}", midi_event->Command);
+			std::println("current note: {}"
+					, MidiParser::key_to_freq_lookup()[midi_event->KeyNumber]);
+			if (midi_event->Command == 1) {
+				cur_freq.store(MidiParser::key_to_freq_lookup()[midi_event->KeyNumber]);
+			}
+			else {
+				cur_freq.store(0);
+			}
+		}
+	}
+}
+
 class MidiIn {
 public:
-	MidiIn() {
+	MidiIn(std::atomic<double>& t_cur_freq_)
+		: cur_freq_(t_cur_freq_)
+	{
 		try {
-			midiin_ = std::make_shared<::RtMidiIn>();
+			midi_in_ = std::make_shared<::RtMidiIn>();
 		} catch (::RtMidiError error) {
 			std::println("error constructing a midi in instance: {}", error.getMessage());
 			return;
@@ -24,43 +49,25 @@ public:
 	}
 
 	void RecieveShit() {
-		is_running = true;
-
-		midiin_->openVirtualPort();
+		// is_running = true;
+		midi_in_->openVirtualPort();
 		// // Don't ignore sysex, timing, or active sensing messages.
-		midiin_->ignoreTypes(true, false, true);
+		midi_in_->ignoreTypes(true, false, true);
 
 		std::vector<std::uint8_t> message_vec;
+		void* user_data = static_cast<void*>(&cur_freq_);
 
-		// TODO: understand if this is right, does it copy the this ptr or the this object
-		// but fuck it it works lmao
-		midi_thr_ = std::thread([&message_vec, this]{
-			while(is_running.load()) {
-				midiin_->getMessage(&message_vec);
-				if (!message_vec.empty()) {
-					std::optional<MidiParser::MidiEvent> midi_event = MidiParser::Parse(message_vec);
-					if (midi_event) {
-						std::println("current keynumber: {}", midi_event->KeyNumber);
-						std::println("current command: {}", midi_event->Command);
-						std::println("current note: {}"
-								, MidiParser::key_to_freq_lookup()[midi_event->KeyNumber]);
-					}
-				}
-			}
-		});
+		midi_in_->setCallback(&Callback, user_data);
 	}
 	
 	void Stop() {
-		is_running = false;
-		midi_thr_.join();
 	}
-
-public:
-	std::atomic<std::uint16_t> cur_freq{0};
+	
 private:
-	std::shared_ptr<::RtMidiIn> midiin_;
-	std::thread midi_thr_;
-	std::atomic<bool> is_running{false};
+	std::atomic<double>& cur_freq_;
+	std::shared_ptr<::RtMidiIn> midi_in_;
+	// std::thread midi_thr_;
+	// std::atomic<bool> is_running{false};
 };
 
 }
