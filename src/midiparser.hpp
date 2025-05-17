@@ -2,7 +2,6 @@
 #include <array>
 #include <cstdlib>
 #include <optional>
-#include <print>
 #include <vector>
 #include <gcem.hpp>
 
@@ -14,6 +13,7 @@ public:
 		std::array<double, 128> lookup{0};
 		uint8_t key_number = 0;
 		for (double& freq : lookup) {
+			// using gcem because std::pow is not constexpr for some fucking reason
 			freq = 440 * gcem::pow(2, (static_cast<float>(key_number) - 69) / 12);
 			++key_number;
 		}
