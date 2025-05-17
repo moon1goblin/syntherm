@@ -6,9 +6,9 @@
 #include <optional>
 #include <print>
 
-#include "envelope.hpp"
+#include "../utils/envelope.hpp"
+#include "../utils/types_and_constants.hpp"
 #include "notebundle.hpp"
-#include "types_and_constants.hpp"
 
 namespace synth {
 

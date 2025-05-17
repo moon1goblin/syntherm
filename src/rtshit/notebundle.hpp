@@ -1,8 +1,8 @@
 #pragma once
 
-#include "envelope.hpp"
-#include "types_and_constants.hpp"
-#include "oscilator.hpp"
+#include "../utils/envelope.hpp"
+#include "../utils/types_and_constants.hpp"
+#include "../utils/oscilator.hpp"
 
 namespace synth {
 

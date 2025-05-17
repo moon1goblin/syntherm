@@ -1,21 +1,17 @@
 #include <csignal>
-#include <optional>
-#include <print>
 
-#include "envelope.hpp"
-#include "midiin.hpp"
-#include "notebundle.hpp"
-#include "oscilator.hpp"
-#include "audioout.hpp"
+#include "rtshit/audioout.hpp"
+#include "rtshit/midiin.hpp"
 
 int main() {
-	// doesnt do anything for the release yet
-	auto my_envelope = synth::Envelope::MakeEnvelope(30, 100, 0, 200);
+	// TODO: add ability to change envelope in real time
+	auto my_envelope = synth::Envelope::MakeEnvelope(30, 40, 50, 300);
 	if (!my_envelope) {
 		std::println("failed to make envelope");
 		return 1;
 	}
 
+	// bundle is the communication method between midi in and audio out
 	synth::NoteBundle my_bundle(synth::Oscilator(), *my_envelope);
 
 	auto my_midi_in = synth::MidiIn::MakeMidiIn(my_bundle);
@@ -30,14 +26,13 @@ int main() {
 		return 1;
 	}
 
+	my_midi_in->RecieveShit();
+	my_audio_out->PlayShit();
+
 	static bool done = false;
 	std::signal(SIGINT, [](int) {
 		done = true;
 	});
-
-	my_midi_in->RecieveShit();
-	my_audio_out->PlayShit();
-
 	while (!done) {
 	}
 
