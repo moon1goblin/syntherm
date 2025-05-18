@@ -6,44 +6,11 @@
 #include <optional>
 #include <print>
 
-#include "../utils/envelope.hpp"
-#include "../utils/types_and_constants.hpp"
 #include "notebundle.hpp"
+#include "types_and_constants.hpp"
+#include "callback.hpp"
 
 namespace synth {
-
-namespace callbacks {
-
-static int AudioOutCallback(
-	void* outputbuf
-	, void* /*inputbuf*/
-	, unsigned int buffer_frames
-	, double stream_time_seconds
-	, ::RtAudioStreamStatus /*stream_status*/
-	, void* user_data
-) {
-	double* buf_doubles = static_cast<double*>(outputbuf);
-	types::time_sampleunits_t cur_time_sampleunits = stream_time_seconds * constants::sample_rate_hz;
-
-	synth::NoteBundle* note_bundle_ptr = static_cast<synth::NoteBundle*>(user_data);
-
-	for(std::size_t i = 0; i < buffer_frames; ++i) {
-		*buf_doubles = 
-			constants::total_amplitude
-			* note_bundle_ptr->oscilator.Sinwave(note_bundle_ptr->GetFrequency(), cur_time_sampleunits)
-			* note_bundle_ptr->oscilator_envelope.GetEnvelopeCoefficient(
-				note_bundle_ptr->time_at_this_note_sampleunits
-				, note_bundle_ptr->is_playing
-			);
-		++note_bundle_ptr->time_at_this_note_sampleunits;
-		++cur_time_sampleunits;
-		++buf_doubles;
-	}
-
-	return 0;
-}
-
-}
 
 class AudioOut {
 private:
@@ -68,12 +35,12 @@ private:
 			, RTAUDIO_FLOAT32
 			, constants::sample_rate_hz
 			, &constants::buffer_sample_frames
-			, &callbacks::AudioOutCallback
+			, &synth::callbacks::AudioOutCallback
 			, user_data_for_callback
 		);
 		if (error) {
 			std::println(stderr, "error opening a stream: {}/n", rt_audio_->getErrorText());
-			throw;
+			throw "bruh";
 		}
 	}
 

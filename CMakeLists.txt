@@ -1,17 +1,12 @@
 cmake_minimum_required(VERSION 4.0)
 
-project(bruh)
+project(synth)
 
 set (CMAKE_CXX_STANDARD 23)
 # for clangd lsp to work
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(run src/main.cpp)
-
-# add_library(synth INTERFACE)
-# target_include_directories(synth INTERFACE 
-# 	${CMAKE_CURRENT_SOURCE_DIR}/src
-# )
 
 # i know this is horrible but this is the only way i could get it to work
 # im done fucking with cmake for now
@@ -35,5 +30,3 @@ target_link_libraries(run PRIVATE
 	rtmidi
 	rtaudio
 )
-
-# target_link_libraries(run PRIVATE synth)

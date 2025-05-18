@@ -5,16 +5,21 @@
 #include <vector>
 #include <gcem.hpp>
 
+#include "types_and_constants.hpp"
+
 namespace synth {
 
 class MidiParser {
 public:
-	static constexpr std::array<double, 128> key_to_freq_lookup() {
+	static constexpr std::array<double, 128> key_to_freq_1_over_sampleunits_lookup() {
 		std::array<double, 128> lookup{0};
 		uint8_t key_number = 0;
 		for (double& freq : lookup) {
 			// using gcem because std::pow is not constexpr for some fucking reason
-			freq = 440 * gcem::pow(2, (static_cast<float>(key_number) - 69) / 12);
+			// this is for 1 / hz
+			// freq = 440 * gcem::pow(2, (static_cast<float>(key_number) - 69) / 12);
+			// and this is for 1 / sampleunit
+			freq = 440.0 * gcem::pow(2, (static_cast<float>(key_number) - 69) / 12) / constants::sample_rate_hz;
 			++key_number;
 		}
 		return lookup;
@@ -39,7 +44,8 @@ public:
 		auto read_bytes_from_message = [&](size_t how_many = 1) -> void {
 			while (how_many) {
 				if (cur_index_in_buffer >= message_buffer.size()) {
-					throw;
+					// for some reason it wasnt catching the throw; without the string
+					throw "bruh";
 				}
 				buffer = message_buffer[cur_index_in_buffer];
 				++cur_index_in_buffer;
@@ -126,7 +132,6 @@ public:
 				}
 			// }
 		} catch (...) {
-			// std::println("caught something");
 		}
 		return std::nullopt;
 	}

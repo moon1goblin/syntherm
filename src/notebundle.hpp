@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../utils/envelope.hpp"
-#include "../utils/types_and_constants.hpp"
-#include "../utils/oscilator.hpp"
+#include "envelope.hpp"
+#include "types_and_constants.hpp"
+#include "oscilator.hpp"
 
 namespace synth {
 
@@ -14,8 +14,8 @@ public:
 	{
 	}
 
-	void SetNote(const types::freq_hz_t& frequency_hz) {
-		frequency_hz_ = frequency_hz;
+	void SetNote(const types::freq_1_over_sampleunits_t& frequency_1_over_sampleunits) {
+		frequency_1_over_sampleunits_ = frequency_1_over_sampleunits;
 		time_at_this_note_sampleunits = 0;
 		is_playing = true;
 	}
@@ -25,8 +25,8 @@ public:
 		time_at_this_note_sampleunits = 0;
 	}
 
-	const types::freq_hz_t& GetFrequency() {
-		return frequency_hz_;
+	const types::freq_1_over_sampleunits_t& GetFrequency() {
+		return frequency_1_over_sampleunits_;
 	}
 
 public:
@@ -37,7 +37,7 @@ public:
 	bool is_playing = false;
 
 private:
-	types::freq_hz_t frequency_hz_ = 0;
+	types::freq_1_over_sampleunits_t frequency_1_over_sampleunits_ = 0;
 	// // TODO: add velocity with this
 	// types::amplitude_coef_t amplitude_coef;
 };
