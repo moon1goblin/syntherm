@@ -96,10 +96,6 @@ public:
 				static bool running_event = false;
 				MidiEvent midi_event;
 
-				// std::println("what the fuck {:08b}", buffer);
-				// std::println("what the fuck {}", buffer == 0b1001'0000);
-				// std::println("what the fuck {}", buffer & (1 << 7));
-
 				if (buffer & (1 << 7)) {
 					// std::println("midi event");
 					midi_event.TrackNumber = buffer & (0b0000'1111);

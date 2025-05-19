@@ -4,25 +4,46 @@
 #include <optional>
 #include <print>
 #include <RtMidi.h>
+#include <RtAudio.h>
 
-#include "notebundle.hpp"
-#include "callback.hpp"
+#include "voicemanager.hpp"
+#include "callbacks.hpp"
 
 namespace synth {
 
+namespace callbacks {
+
+// forward declare
+// idk its a whole mess
+void MidiInCallback(
+	double /*timeStamp*/
+	, std::vector<std::uint8_t>* message_vec
+	, void* user_data
+);
+
+int AudioOutCallback(
+	void* outputbuf
+	, void* /*inputbuf*/
+	, unsigned int buffer_frames
+	, double stream_time_seconds
+	, ::RtAudioStreamStatus /*stream_status*/
+	, void* user_data
+);
+
+}
+
 class MidiIn {
 private:
-	MidiIn(synth::NoteBundle& t_note_bundle)
-		: midi_in_()
-		, note_bundle_(t_note_bundle)
+	MidiIn(synth::VoiceManager& t_voice_manager)
+			: midi_in_()
+			, voice_manager_(t_voice_manager)
 	{
 	}
 
 public:
-	[[nodiscard]] static std::optional<MidiIn> MakeMidiIn(synth::NoteBundle& t_note_bundle)
-	{
+	[[nodiscard]] static std::optional<MidiIn> MakeMidiIn(synth::VoiceManager& voice_manager) {
 		try {
-			return std::optional<MidiIn>(MidiIn(t_note_bundle));
+			return std::optional<MidiIn>(MidiIn(voice_manager));
 		} catch (::RtMidiError error) {
 			std::println(stderr, "error constructing a midi in instance: {}", error.getMessage());
 			return std::nullopt;
@@ -30,7 +51,7 @@ public:
 	}
 
 	void RecieveShit() {
-		void* user_data = static_cast<void*>(&note_bundle_);
+		void* user_data = static_cast<void*>(&voice_manager_);
 
 		// midi_in_.setErrorCallback(&synth::callbacks::MidiInErrorCallback);
 		midi_in_.setCallback(&synth::callbacks::MidiInCallback, user_data);
@@ -39,13 +60,10 @@ public:
 		// midi_in_.ignoreTypes(true, true, true);
 		midi_in_.openVirtualPort("my synth");
 	}
-	
-	// void Stop() {
-	// }
-	
+
 private:
 	::RtMidiIn midi_in_;
-	synth::NoteBundle& note_bundle_;
+	synth::VoiceManager& voice_manager_;
 };
 
 }

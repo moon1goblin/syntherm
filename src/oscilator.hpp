@@ -11,7 +11,7 @@ namespace oscilators {
 class SinWave {
 public:
 	double operator()(
-		const types::freq_1_over_sampleunits_t frequency_1_over_sampleunits
+		const types::frequency_1_over_sampleunits_t frequency_1_over_sampleunits
 		, const types::time_sampleunits_t& time_sample_units
 	) const {
 		return std::sin(2.0 * std::numbers::pi * frequency_1_over_sampleunits * time_sample_units);
@@ -21,7 +21,7 @@ public:
 class SawWave {
 public:
 	double operator()(
-		const types::freq_1_over_sampleunits_t frequency_1_over_sampleunits
+		const types::frequency_1_over_sampleunits_t frequency_1_over_sampleunits
 		, const types::time_sampleunits_t& time_sample_units
 	) const {
 		// [0, +1]: (time_sampleunits % period_sampleunits) / period_sampleunits

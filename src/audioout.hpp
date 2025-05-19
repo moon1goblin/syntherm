@@ -6,16 +6,16 @@
 #include <optional>
 #include <print>
 
-#include "notebundle.hpp"
 #include "types_and_constants.hpp"
-#include "callback.hpp"
+#include "midiin.hpp"
+#include "voicemanager.hpp"
 
 namespace synth {
 
 class AudioOut {
 private:
-	AudioOut(synth::NoteBundle& t_note_bundle)
-		: note_bundle_(t_note_bundle)
+	AudioOut(VoiceManager& t_voice_manager)
+		: voice_manager_(t_voice_manager)
 	{
 		rt_audio_ = std::make_shared<::RtAudio>();
 		RtAudio::StreamParameters parameters;
@@ -27,7 +27,7 @@ private:
 		// std::println("device name: {}", info.name);
 		// std::println("number of output channels: {}", info.outputChannels);
 
-		void* user_data_for_callback = static_cast<void*>(&note_bundle_);
+		void* user_data_for_callback = static_cast<void*>(&t_voice_manager);
 
 		RtAudioErrorType error = rt_audio_->openStream(
 			&parameters
@@ -45,9 +45,9 @@ private:
 	}
 
 public:
-	[[nodiscard]] static std::optional<AudioOut> MakeAudioOut(synth::NoteBundle& t_note_bundle) {
+	[[nodiscard]] static std::optional<AudioOut> MakeAudioOut(VoiceManager& voice_manager) {
 		try {
-			return std::optional<AudioOut>(AudioOut(t_note_bundle));
+			return std::optional<AudioOut>(AudioOut(voice_manager));
 		} catch (...) {
 			std::println(stderr, "error making audio out");
 		}
@@ -79,7 +79,7 @@ public:
 private:
 	// kept segfaulting so i had to do make it shared bruh
 	std::shared_ptr<RtAudio> rt_audio_;
-	synth::NoteBundle& note_bundle_;
+	synth::VoiceManager& voice_manager_;
 };
 
 }

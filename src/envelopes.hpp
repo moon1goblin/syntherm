@@ -50,7 +50,10 @@ public:
 	}
 
 	// returns a coefficient from 0 to 1
-	double operator()(const types::time_sampleunits_t& time_at_this_note_sampleunits, bool is_playing) const { 
+	double operator()(
+		const types::time_sampleunits_t& time_at_this_note_sampleunits
+		, bool is_playing
+	) const { 
 		// helper lambda
 		auto between = [&time_at_this_note_sampleunits](double left, double right) -> bool
 		{
@@ -81,6 +84,13 @@ public:
 		else {
 			return 0.0;
 		}
+	}
+
+	bool IsDonePlaying(
+		const types::time_sampleunits_t& time_at_this_note_sampleunits
+		, bool is_playing
+	) const {
+		return !is_playing && time_at_this_note_sampleunits > release_sampleunits_;
 	}
 
 private:

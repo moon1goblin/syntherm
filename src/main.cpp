@@ -1,29 +1,31 @@
 #include <csignal>
 #include <print>
 
-#include "audioout.hpp"
-#include "midiin.hpp"
 #include "oscilator.hpp"
-#include "envelope.hpp"
+#include "envelopes.hpp"
+#include "types_and_constants.hpp"
+#include "voicemanager.hpp"
+#include "midiin.hpp"
+#include "audioout.hpp"
 
 int main() {
-	// adsr
-	auto my_envelope = synth::envelopes::ADSR::MakeEnvelope(10, 100, 50, 0);
+	auto my_envelope = synth::envelopes::ADSR::MakeEnvelope(40, 50, 30, 200);
 	if (!my_envelope) {
 		std::println("failed to make envelope");
 		return 1;
 	}
+	synth::types::amplitude_coef_t total_amplitude = 0.00001;
 
-	// bundle is the communication method between midi in and audio out
-	synth::NoteBundle my_bundle(synth::oscilators::SinWave(), *my_envelope);
+	// polyphony sounds very distorted with the sinwave, dont know why
+	synth::VoiceManager my_voice_manager(synth::oscilators::SawWave(), *my_envelope, total_amplitude);
 
-	auto my_midi_in = synth::MidiIn::MakeMidiIn(my_bundle);
+	auto my_midi_in = synth::MidiIn::MakeMidiIn(my_voice_manager);
 	if (!my_midi_in) {
 		std::println("failed to make midi in");
 		return 1;
 	}
 
-	auto my_audio_out = synth::AudioOut::MakeAudioOut(my_bundle);
+	auto my_audio_out = synth::AudioOut::MakeAudioOut(my_voice_manager);
 	if (!my_audio_out) {
 		std::println("failed to make audio out");
 		return 1;
@@ -36,8 +38,10 @@ int main() {
 	std::signal(SIGINT, [](int) {
 		done = true;
 	});
-	std::println("get yourself a (virtual) midi keyboard and choose \"my synth\" in the connections");
+
+	std::println("get yourself a midi keyboard and choose \"my synth\" as the virtual port");
 	std::println("press Ctrl+C to quit");
+
 	while (!done) {
 	}
 
