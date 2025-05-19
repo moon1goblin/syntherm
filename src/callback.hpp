@@ -1,6 +1,7 @@
 #pragma once
 
 #include <RtAudio.h>
+#include <print>
 
 #include "types_and_constants.hpp"
 #include "notebundle.hpp"
@@ -26,11 +27,10 @@ int AudioOutCallback(
 		*buf_doubles = 
 			constants::total_amplitude
 			* note_bundle_ptr->oscilator(note_bundle_ptr->GetFrequency(), cur_time_sampleunits)
-			* note_bundle_ptr->oscilator_envelope(
+			* note_bundle_ptr->adsr(
 				note_bundle_ptr->time_at_this_note_sampleunits
 				, note_bundle_ptr->is_playing
 			);
-			;
 
 		++note_bundle_ptr->time_at_this_note_sampleunits;
 		++cur_time_sampleunits;

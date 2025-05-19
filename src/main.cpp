@@ -4,20 +4,18 @@
 #include "audioout.hpp"
 #include "midiin.hpp"
 #include "oscilator.hpp"
+#include "envelope.hpp"
 
 int main() {
-	// TODO: change envelope and oscilator in real time
-	synth::Oscilator my_oscilator(synth::Oscilator::OscilatorType::SAW);
-
 	// adsr
-	auto my_envelope = synth::Envelope::MakeEnvelope(10, 100, 50, 0);
+	auto my_envelope = synth::envelopes::ADSR::MakeEnvelope(10, 100, 50, 0);
 	if (!my_envelope) {
 		std::println("failed to make envelope");
 		return 1;
 	}
 
 	// bundle is the communication method between midi in and audio out
-	synth::NoteBundle my_bundle(my_oscilator, *my_envelope);
+	synth::NoteBundle my_bundle(synth::oscilators::SinWave(), *my_envelope);
 
 	auto my_midi_in = synth::MidiIn::MakeMidiIn(my_bundle);
 	if (!my_midi_in) {

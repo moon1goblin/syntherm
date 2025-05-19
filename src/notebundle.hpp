@@ -1,16 +1,27 @@
 #pragma once
 
-#include "envelope.hpp"
 #include "types_and_constants.hpp"
-#include "oscilator.hpp"
+#include <functional>
+#include <print>
 
 namespace synth {
 
 class NoteBundle {
 public:
-	NoteBundle(const synth::Oscilator& t_oscilator, const synth::Envelope& t_oscilator_envelope)
+	using adsr_t = std::function<double(
+		const types::time_sampleunits_t& time_at_this_note_sampleunits
+		, bool is_playing
+	)>;
+	 using oscilator_t = std::function<double(
+		 const types::freq_1_over_sampleunits_t frequency_1_over_sampleunits
+		 , const types::time_sampleunits_t& time_sample_units
+	 )>;
+
+public:
+	// NoteBundle(const synth::oscilators::SinWave& t_oscilator, const envelopes::ADSR& t_adsr)
+	NoteBundle(oscilator_t t_oscilator, adsr_t t_adsr)
 	: oscilator(t_oscilator)
-	, oscilator_envelope(t_oscilator_envelope)
+	, adsr(t_adsr)
 	{
 	}
 
@@ -18,6 +29,7 @@ public:
 		frequency_1_over_sampleunits_ = frequency_1_over_sampleunits;
 		time_at_this_note_sampleunits = 0;
 		is_playing = true;
+		std::println("set note called");
 	}
 
 	void ClearNote() {
@@ -25,13 +37,17 @@ public:
 		time_at_this_note_sampleunits = 0;
 	}
 
-	const types::freq_1_over_sampleunits_t& GetFrequency() {
+	const types::freq_1_over_sampleunits_t& GetFrequency() const {
 		return frequency_1_over_sampleunits_;
 	}
 
+	// // TODO: make this call the destructor if adsr is finished
+	// void IncrementTimeAtThisNote() {
+	// }
+
 public:
-	Oscilator oscilator;
-	Envelope oscilator_envelope;
+	oscilator_t oscilator;
+	adsr_t adsr;
 	// for the oscilator envelope
 	types::time_sampleunits_t time_at_this_note_sampleunits = 0;
 	bool is_playing = false;

@@ -6,9 +6,13 @@
 
 namespace synth {
 
-class Envelope {
+// have adsr, velocity curve and lfo here
+namespace envelopes {
+
+// a functor class for the adsr of the oscilator
+class ADSR {
 private:
-	Envelope(const double attack_delta_ms
+	ADSR(const double attack_delta_ms
 		, const double decay_delta_ms
 		, const double sustain_percents
 		, const double release_delta_ms
@@ -26,14 +30,14 @@ private:
 	}
 
 public:
-	[[nodiscard]] static std::optional<Envelope> MakeEnvelope(
+	[[nodiscard]] static std::optional<ADSR> MakeEnvelope(
 		const double attack_delta_ms
 		, const double decay_delta_ms
 		, const double sustain_percents
 		, const double release_delta_ms
 	) {
 		try {
-			return std::optional<Envelope>(Envelope(
+			return std::optional<ADSR>(ADSR(
 				attack_delta_ms
 				, decay_delta_ms
 				, sustain_percents
@@ -86,4 +90,5 @@ private:
 	double release_sampleunits_;
 };
 
+}
 }
