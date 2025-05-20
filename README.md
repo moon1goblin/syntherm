@@ -1,6 +1,6 @@
-# termsynth
+# syntherm
 
-termsynth is a simple digital synthesizer working right in your terminal 
+syntherm is a simple digital synthesizer working right in your terminal 
 
 (idfk hit me up for better name ideas)
 
