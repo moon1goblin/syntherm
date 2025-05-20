@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <optional>
 #include <algorithm>
+#include <print>
 #include <ranges>
 
 #include "types_and_constants.hpp"
@@ -17,15 +18,20 @@ public:
 	VoiceManager(
 			types::oscilator_t t_oscilator
 			, const envelopes::ADSR& t_adsr
-			, types::amplitude_coef_t t_total_amplitude
+			, envelopes::VelocityCurve t_velocity_curve
+			, double t_total_amplitude
 	) 
 			: oscilator(t_oscilator)
 			, adsr(t_adsr)
+			, velocity_curve(t_velocity_curve)
 			, total_amplitude(t_total_amplitude)
 	{
 	}
 
-	void AddVoice(types::frequency_1_over_sampleunits_t freq) {
+	void AddVoice(
+			const types::frequency_1_over_sampleunits_t frequency
+			, const types::velocity_t velocity
+	) {
 		if (voices_occupied >= constants::max_polyphony_voices) {
 			return;
 		}
@@ -37,15 +43,21 @@ public:
 		);
 		// theoretically shouldnt need this but just to be safe
 		if (free_place != voices_container_.end()) {
-			*free_place = std::make_optional<synth::Voice>(synth::Voice(freq));
+			free_place->emplace(frequency, velocity);
 			++voices_occupied;
 		}
 	}
 
-	void ClearVoice(types::frequency_1_over_sampleunits_t freq) {
+	void ClearVoice(
+			const types::frequency_1_over_sampleunits_t frequency
+			, const types::velocity_t velocity
+	) {
 		auto find_all_by_freq = voices_container_ 
-			| std::views::filter([freq](const auto& voice) {
-				return voice && voice->GetFrequency() == freq;
+			| std::views::filter([=](const auto& voice) {
+				return voice 
+					&& voice->GetFrequency() == frequency;
+					// so yea note off messages can have velocity of 0, cant use this
+					// && voice->GetVelocity() == velocity;
 			}
 		);
 		for (auto& voice : find_all_by_freq) {
@@ -59,7 +71,7 @@ public:
 				break;
 			}
 			if (voice && adsr.IsDonePlaying(voice->time_at_this_note_sampleunits, voice->is_playing)) {
-				voice = std::nullopt;
+				voice.reset();
 				--voices_occupied;
 			}
 		}
@@ -74,7 +86,8 @@ public:
 public:
 	types::oscilator_t oscilator;
 	envelopes::ADSR adsr;
-	types::amplitude_coef_t total_amplitude;
+	envelopes::VelocityCurve velocity_curve;
+	double total_amplitude;
 
 private:
 	std::uint8_t voices_occupied = 0;

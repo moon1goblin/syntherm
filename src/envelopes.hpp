@@ -3,6 +3,7 @@
 #include "types_and_constants.hpp"
 #include <optional>
 #include <print>
+#include <cmath>
 
 namespace synth {
 
@@ -87,8 +88,8 @@ public:
 	}
 
 	bool IsDonePlaying(
-		const types::time_sampleunits_t& time_at_this_note_sampleunits
-		, bool is_playing
+			const types::time_sampleunits_t& time_at_this_note_sampleunits
+			, bool is_playing
 	) const {
 		return !is_playing && time_at_this_note_sampleunits > release_sampleunits_;
 	}
@@ -98,6 +99,13 @@ private:
 	double decay_sampleunits_;
 	double sustain_coef_; // 0 to 1
 	double release_sampleunits_;
+};
+
+class VelocityCurve {
+public:
+	static double operator()(types::velocity_t velocity) {
+		return constants::velocity_lookup[velocity];
+	}
 };
 
 }

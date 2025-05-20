@@ -1,30 +1,12 @@
 #pragma once
-#include <array>
 #include <cstdlib>
 #include <optional>
 #include <vector>
-#include <gcem.hpp>
-
-#include "types_and_constants.hpp"
 
 namespace synth {
 
 class MidiParser {
 public:
-	static constexpr std::array<double, 128> key_to_freq_1_over_sampleunits_lookup() {
-		std::array<double, 128> lookup{0};
-		uint8_t key_number = 0;
-		for (double& freq : lookup) {
-			// using gcem because std::pow is not constexpr for some fucking reason
-			// this is for 1 / hz
-			// freq = 440 * gcem::pow(2, (static_cast<float>(key_number) - 69) / 12);
-			// and this is for 1 / sampleunit
-			freq = 440.0 * gcem::pow(2, (static_cast<float>(key_number) - 69) / 12) / constants::sample_rate_hz;
-			++key_number;
-		}
-		return lookup;
-	};
-
 	struct MidiEvent {
 		uint8_t Command = 0;
 		uint8_t TrackNumber = 0;
@@ -73,7 +55,7 @@ public:
 			// // sysex event
 			// // F0 <length> <sysex_data>
 			// // F7 <length> <any_data>
-			// // TODO: proccess sysex and meta events for real
+			// // todo: proccess sysex and meta events for real
 			// if (buffer == 0xF0 || buffer == 0xF7) {
 			// 	// uint32_t sysex_event_length;
 			// 	// bytes_read += ReadVariableLength(ifs, sysex_event_length);
@@ -91,6 +73,7 @@ public:
 			// }
 			// // midi event duh
 			// else {
+				// TODO: take all theses statics and make them class members
 				static uint16_t last_midi_command;
 				static uint16_t last_midi_track_number;
 				static bool running_event = false;
@@ -124,7 +107,7 @@ public:
 						midi_event.Command = 0;
 					}
 
-					return midi_event;
+					return std::make_optional(midi_event);
 				}
 			// }
 		} catch (...) {

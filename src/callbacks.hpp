@@ -39,7 +39,8 @@ int AudioOutCallback(
 				* voice_manager_ptr->adsr(
 					cur_voice->time_at_this_note_sampleunits
 					, cur_voice->is_playing
-			);
+				)
+				* voice_manager_ptr->velocity_curve(cur_voice->GetVelocity());
 			++cur_voice->time_at_this_note_sampleunits;
 		}
 		++cur_time_sampleunits;
@@ -63,16 +64,23 @@ void MidiInCallback(
 
 	// note on
 	if (midi_event->Command == 1) {
-		voice_manager_ptr->AddVoice(MidiParser::key_to_freq_1_over_sampleunits_lookup()[midi_event->KeyNumber]);
+		voice_manager_ptr->AddVoice(
+				constants::key_to_freq_lookup[midi_event->KeyNumber]
+				, midi_event->Velocity
+		);
 	}
 	// note off
 	else if (midi_event->Command == 0) {
-		voice_manager_ptr->ClearVoice(MidiParser::key_to_freq_1_over_sampleunits_lookup()[midi_event->KeyNumber]);
+		voice_manager_ptr->ClearVoice(
+				constants::key_to_freq_lookup[midi_event->KeyNumber]
+				, midi_event->Velocity
+		);
 	}
 
 	// for (const auto& voice : voice_manager_ptr->GetVoices()) {
-	// 	if (voice != std::nullopt) {
+	// 	if (voice) {
 	// 		std::println("{:0.5f}", voice->GetFrequency());
+	// 		std::println("{}", voice->GetVelocity());
 	// 	}
 	// }
 	// std::println("");

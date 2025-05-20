@@ -14,10 +14,17 @@ int main() {
 		std::println("failed to make envelope");
 		return 1;
 	}
-	synth::types::amplitude_coef_t total_amplitude = 0.00001;
 
-	// polyphony sounds very distorted with the sinwave, dont know why
-	synth::VoiceManager my_voice_manager(synth::oscilators::SawWave(), *my_envelope, total_amplitude);
+	// its loud as fuck
+	double total_amplitude = 0.00000000001;
+
+	// polyphony sounds very distorted, no fucking clue why
+	synth::VoiceManager my_voice_manager(
+			synth::oscilators::TriangleWave()
+			, *my_envelope
+			, synth::envelopes::VelocityCurve()
+			, total_amplitude
+	);
 
 	auto my_midi_in = synth::MidiIn::MakeMidiIn(my_voice_manager);
 	if (!my_midi_in) {
