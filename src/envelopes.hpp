@@ -1,9 +1,7 @@
 #pragma once
 
 #include "types_and_constants.hpp"
-#include <optional>
-#include <print>
-#include <cmath>
+#include <expected>
 
 namespace synth {
 
@@ -26,28 +24,28 @@ private:
 		if (attack_sampleunits_ < 0 || decay_sampleunits_ < 0 || release_sampleunits_ < 0
 			|| sustain_coef_ < 0 || sustain_coef_ > 1) {
 			// for some reason it wasnt catching the throw; without the string
-			throw "bruh";
+			throw std::string("error making an envelope: invalid envelope parameters");
 		}
 	}
 
 public:
-	[[nodiscard]] static std::optional<ADSR> MakeEnvelope(
+	[[nodiscard]] static std::expected<ADSR, std::string> 
+	CreateEnvelope(
 		const double attack_delta_ms
 		, const double decay_delta_ms
 		, const double sustain_percents
 		, const double release_delta_ms
 	) {
 		try {
-			return std::optional<ADSR>(ADSR(
+			return ADSR(
 				attack_delta_ms
 				, decay_delta_ms
 				, sustain_percents
 				, release_delta_ms
-			));
-		} catch (...) {
-			std::println(stderr, "error making an envelope: invalid envelope parameters");
+			);
+		} catch (const std::string& error) {
+			return std::unexpected(error);
 		}
-		return std::nullopt;
 	}
 
 	// returns a coefficient from 0 to 1

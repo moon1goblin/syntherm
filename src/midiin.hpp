@@ -1,8 +1,7 @@
 #pragma once
 
 #include <cstdlib>
-#include <optional>
-#include <print>
+#include <expected>
 #include <RtMidi.h>
 #include <RtAudio.h>
 
@@ -35,18 +34,22 @@ int AudioOutCallback(
 class MidiIn {
 private:
 	MidiIn(synth::VoiceManager& t_voice_manager)
-			: midi_in_()
-			, voice_manager_(t_voice_manager)
+			: voice_manager_(t_voice_manager)
 	{
+		try {
+			RtMidiIn midi_in_{};
+		} catch (::RtMidiError error) {
+			throw std::string("error constructing a midi in instance: " + error.getMessage());
+		}
 	}
 
 public:
-	[[nodiscard]] static std::optional<MidiIn> MakeMidiIn(synth::VoiceManager& voice_manager) {
+	[[nodiscard]] static std::expected<MidiIn, std::string> 
+	CreateMidiIn(synth::VoiceManager& voice_manager) {
 		try {
-			return std::optional<MidiIn>(MidiIn(voice_manager));
-		} catch (::RtMidiError error) {
-			std::println(stderr, "error constructing a midi in instance: {}", error.getMessage());
-			return std::nullopt;
+			return MidiIn(voice_manager);
+		} catch (const std::string& error) {
+			return std::unexpected(error);
 		}
 	}
 

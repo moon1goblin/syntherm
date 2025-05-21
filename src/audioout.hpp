@@ -2,8 +2,8 @@
 
 #include <RtAudio.h>
 #include <cstdio>
+#include <expected>
 #include <memory>
-#include <optional>
 #include <print>
 
 #include "types_and_constants.hpp"
@@ -17,7 +17,13 @@ private:
 	AudioOut(VoiceManager& t_voice_manager)
 		: voice_manager_(t_voice_manager)
 	{
-		rt_audio_ = std::make_shared<::RtAudio>();
+		// i don think this throws, but just to be safe
+		try {
+			rt_audio_ = std::make_unique<::RtAudio>();
+		} catch (...) {
+			throw;
+		}
+
 		RtAudio::StreamParameters parameters;
 		parameters.deviceId = rt_audio_->getDefaultOutputDevice();
 		parameters.nChannels = 2;
@@ -39,32 +45,31 @@ private:
 			, user_data_for_callback
 		);
 		if (error) {
-			std::println(stderr, "error opening a stream: {}/n", rt_audio_->getErrorText());
-			throw "bruh";
+			throw std::string("error opening a stream: {}\n" + rt_audio_->getErrorText());
 		}
 	}
 
 public:
-	[[nodiscard]] static std::optional<AudioOut> MakeAudioOut(VoiceManager& voice_manager) {
+	[[nodiscard]] static std::expected<AudioOut, std::string> CreateAudioOut(VoiceManager& voice_manager) {
 		try {
-			return std::optional<AudioOut>(AudioOut(voice_manager));
+			return AudioOut(voice_manager);
+		} catch (const std::string& error) {
+			return std::unexpected(error);
 		} catch (...) {
-			std::println(stderr, "error making audio out");
+			return std::unexpected("error constructing an RtAudio instance");
 		}
-		return std::nullopt;
 	}
 
-	bool PlayShit() {
+	std::expected<void, std::string> 
+	PlayShit() {
 		RtAudioErrorType error = rt_audio_->startStream();
 		if (error) {
-			std::println(stderr, "error starting a stream: {}/n", rt_audio_->getErrorText());
-
 			if (rt_audio_->isStreamOpen()) {
 				rt_audio_->closeStream();
 			}
-			return false;
+			return std::unexpected("error starting a stream: {}\n" + rt_audio_->getErrorText());
 		}
-		return true;
+		return {};
 	}
 
 	void Stop() {
@@ -77,8 +82,7 @@ public:
 	}
 
 private:
-	// kept segfaulting so i had to do make it shared bruh
-	std::shared_ptr<RtAudio> rt_audio_;
+	std::unique_ptr<RtAudio> rt_audio_;
 	synth::VoiceManager& voice_manager_;
 };
 

@@ -1,4 +1,6 @@
 #include <csignal>
+#include <cstdlib>
+#include <expected>
 #include <print>
 
 #include "oscilator.hpp"
@@ -9,11 +11,15 @@
 #include "audioout.hpp"
 
 int main() {
-	auto my_envelope = synth::envelopes::ADSR::MakeEnvelope(40, 50, 30, 200);
-	if (!my_envelope) {
-		std::println("failed to make envelope");
-		return 1;
-	}
+	auto handle_error = []<typename T>(const std::expected<T, std::string>& expected) {
+		if (!expected.has_value()) {
+			std::println("bruuuh {}", expected.error());
+			exit(1);
+		}
+	};
+
+	auto my_envelope = synth::envelopes::ADSR::CreateEnvelope(40, 50, 30, 200);
+	handle_error(my_envelope);
 
 	// its loud as fuck
 	double total_amplitude = 0.00000000001;
@@ -26,20 +32,14 @@ int main() {
 			, total_amplitude
 	);
 
-	auto my_midi_in = synth::MidiIn::MakeMidiIn(my_voice_manager);
-	if (!my_midi_in) {
-		std::println("failed to make midi in");
-		return 1;
-	}
+	auto my_midi_in = synth::MidiIn::CreateMidiIn(my_voice_manager);
+	handle_error(my_midi_in);
 
-	auto my_audio_out = synth::AudioOut::MakeAudioOut(my_voice_manager);
-	if (!my_audio_out) {
-		std::println("failed to make audio out");
-		return 1;
-	}
+	auto my_audio_out = synth::AudioOut::CreateAudioOut(my_voice_manager);
+	handle_error(my_audio_out);
 
 	my_midi_in->RecieveShit();
-	my_audio_out->PlayShit();
+	handle_error(my_audio_out->PlayShit());
 
 	static bool done = false;
 	std::signal(SIGINT, [](int) {
